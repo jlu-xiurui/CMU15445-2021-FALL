@@ -20,11 +20,14 @@ namespace bustub {
  */
 class TmpTuplePage : public Page {
  public:
-  void Init(page_id_t page_id, uint32_t page_size) {}
+  void Init(page_id_t page_id, uint32_t page_size) {
+    memcpy(GetData(), &page_id, sizeof(page_id_t));
+    memcpy(GetData() + sizeof(page_id_t), &page_size, sizeof(uint32_t));
+  }
 
-  page_id_t GetTablePageId() { return INVALID_PAGE_ID; }
+  auto GetTablePageId() -> page_id_t { return INVALID_PAGE_ID; }
 
-  bool Insert(const Tuple &tuple, TmpTuple *out) { return false; }
+  auto Insert(const Tuple &tuple, TmpTuple *out) -> bool { return false; }
 
  private:
   static_assert(sizeof(page_id_t) == 4);

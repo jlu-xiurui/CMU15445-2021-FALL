@@ -83,42 +83,43 @@ class TransactionTest : public ::testing::Test {
   };
 
   /** @return the executor context in our test class */
-  ExecutorContext *GetExecutorContext() { return exec_ctx_.get(); }
-  ExecutionEngine *GetExecutionEngine() { return execution_engine_.get(); }
-  Transaction *GetTxn() { return txn_; }
-  TransactionManager *GetTxnManager() { return txn_mgr_.get(); }
-  Catalog *GetCatalog() { return catalog_.get(); }
-  BufferPoolManager *GetBPM() { return bpm_.get(); }
-  LockManager *GetLockManager() { return lock_manager_.get(); }
+  auto GetExecutorContext() -> ExecutorContext * { return exec_ctx_.get(); }
+  auto GetExecutionEngine() -> ExecutionEngine * { return execution_engine_.get(); }
+  auto GetTxn() -> Transaction * { return txn_; }
+  auto GetTxnManager() -> TransactionManager * { return txn_mgr_.get(); }
+  auto GetCatalog() -> Catalog * { return catalog_.get(); }
+  auto GetBPM() -> BufferPoolManager * { return bpm_.get(); }
+  auto GetLockManager() -> LockManager * { return lock_manager_.get(); }
 
   // The below helper functions are useful for testing.
 
-  const AbstractExpression *MakeColumnValueExpression(const Schema &schema, uint32_t tuple_idx,
-                                                      const std::string &col_name) {
+  auto MakeColumnValueExpression(const Schema &schema, uint32_t tuple_idx, const std::string &col_name)
+      -> const AbstractExpression * {
     uint32_t col_idx = schema.GetColIdx(col_name);
     auto col_type = schema.GetColumn(col_idx).GetType();
     allocated_exprs_.emplace_back(std::make_unique<ColumnValueExpression>(tuple_idx, col_idx, col_type));
     return allocated_exprs_.back().get();
   }
 
-  const AbstractExpression *MakeConstantValueExpression(const Value &val) {
+  auto MakeConstantValueExpression(const Value &val) -> const AbstractExpression * {
     allocated_exprs_.emplace_back(std::make_unique<ConstantValueExpression>(val));
     return allocated_exprs_.back().get();
   }
 
-  const AbstractExpression *MakeComparisonExpression(const AbstractExpression *lhs, const AbstractExpression *rhs,
-                                                     ComparisonType comp_type) {
+  auto MakeComparisonExpression(const AbstractExpression *lhs, const AbstractExpression *rhs, ComparisonType comp_type)
+      -> const AbstractExpression * {
     allocated_exprs_.emplace_back(std::make_unique<ComparisonExpression>(lhs, rhs, comp_type));
     return allocated_exprs_.back().get();
   }
 
-  const AbstractExpression *MakeAggregateValueExpression(bool is_group_by_term, uint32_t term_idx) {
+  auto MakeAggregateValueExpression(bool is_group_by_term, uint32_t term_idx) -> const AbstractExpression * {
     allocated_exprs_.emplace_back(
         std::make_unique<AggregateValueExpression>(is_group_by_term, term_idx, TypeId::INTEGER));
     return allocated_exprs_.back().get();
   }
 
-  const Schema *MakeOutputSchema(const std::vector<std::pair<std::string, const AbstractExpression *>> &exprs) {
+  auto MakeOutputSchema(const std::vector<std::pair<std::string, const AbstractExpression *>> &exprs)
+      -> const Schema * {
     std::vector<Column> cols;
     cols.reserve(exprs.size());
     for (const auto &input : exprs) {
@@ -185,9 +186,9 @@ TEST_F(TransactionTest, DISABLED_SimpleInsertRollbackTest) {
   auto txn2 = GetTxnManager()->Begin();
   auto exec_ctx2 = std::make_unique<ExecutorContext>(txn2, GetCatalog(), GetBPM(), GetTxnManager(), GetLockManager());
   auto &schema = table_info->schema_;
-  auto col_a = MakeColumnValueExpression(schema, 0, "col_a");
-  auto col_b = MakeColumnValueExpression(schema, 0, "col_b");
-  auto out_schema = MakeOutputSchema({{"col_a", col_a}, {"col_b", col_b}});
+  auto col_a = MakeColumnValueExpression(schema, 0, "colA");
+  auto col_b = MakeColumnValueExpression(schema, 0, "colB");
+  auto out_schema = MakeOutputSchema({{"colA", col_a}, {"colB", col_b}});
   SeqScanPlanNode scan_plan{out_schema, nullptr, table_info->oid_};
 
   std::vector<Tuple> result_set;
@@ -223,9 +224,9 @@ TEST_F(TransactionTest, DISABLED_DirtyReadsTest) {
   auto txn2 = GetTxnManager()->Begin(nullptr, IsolationLevel::READ_UNCOMMITTED);
   auto exec_ctx2 = std::make_unique<ExecutorContext>(txn2, GetCatalog(), GetBPM(), GetTxnManager(), GetLockManager());
   auto &schema = table_info->schema_;
-  auto col_a = MakeColumnValueExpression(schema, 0, "col_a");
-  auto col_b = MakeColumnValueExpression(schema, 0, "col_b");
-  auto out_schema = MakeOutputSchema({{"col_a", col_a}, {"col_b", col_b}});
+  auto col_a = MakeColumnValueExpression(schema, 0, "colA");
+  auto col_b = MakeColumnValueExpression(schema, 0, "colB");
+  auto out_schema = MakeOutputSchema({{"colA", col_a}, {"colB", col_b}});
   SeqScanPlanNode scan_plan{out_schema, nullptr, table_info->oid_};
 
   std::vector<Tuple> result_set;
@@ -235,16 +236,16 @@ TEST_F(TransactionTest, DISABLED_DirtyReadsTest) {
   delete txn1;
 
   // First value
-  ASSERT_EQ(result_set[0].GetValue(out_schema, out_schema->GetColIdx("col_a")).GetAs<int32_t>(), 200);
-  ASSERT_EQ(result_set[0].GetValue(out_schema, out_schema->GetColIdx("col_b")).GetAs<int32_t>(), 20);
+  ASSERT_EQ(result_set[0].GetValue(out_schema, out_schema->GetColIdx("colA")).GetAs<int32_t>(), 200);
+  ASSERT_EQ(result_set[0].GetValue(out_schema, out_schema->GetColIdx("colB")).GetAs<int32_t>(), 20);
 
   // Second value
-  ASSERT_EQ(result_set[1].GetValue(out_schema, out_schema->GetColIdx("col_a")).GetAs<int32_t>(), 201);
-  ASSERT_EQ(result_set[1].GetValue(out_schema, out_schema->GetColIdx("col_b")).GetAs<int32_t>(), 21);
+  ASSERT_EQ(result_set[1].GetValue(out_schema, out_schema->GetColIdx("colA")).GetAs<int32_t>(), 201);
+  ASSERT_EQ(result_set[1].GetValue(out_schema, out_schema->GetColIdx("colB")).GetAs<int32_t>(), 21);
 
   // Third value
-  ASSERT_EQ(result_set[2].GetValue(out_schema, out_schema->GetColIdx("col_a")).GetAs<int32_t>(), 202);
-  ASSERT_EQ(result_set[2].GetValue(out_schema, out_schema->GetColIdx("col_b")).GetAs<int32_t>(), 22);
+  ASSERT_EQ(result_set[2].GetValue(out_schema, out_schema->GetColIdx("colA")).GetAs<int32_t>(), 202);
+  ASSERT_EQ(result_set[2].GetValue(out_schema, out_schema->GetColIdx("colB")).GetAs<int32_t>(), 22);
 
   // Size
   ASSERT_EQ(result_set.size(), 3);

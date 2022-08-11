@@ -31,8 +31,8 @@
 
 namespace bustub {
 
-std::unique_ptr<AbstractExecutor> ExecutorFactory::CreateExecutor(ExecutorContext *exec_ctx,
-                                                                  const AbstractPlanNode *plan) {
+auto ExecutorFactory::CreateExecutor(ExecutorContext *exec_ctx, const AbstractPlanNode *plan)
+    -> std::unique_ptr<AbstractExecutor> {
   switch (plan->GetType()) {
     // Create a new sequential scan executor
     case PlanType::SeqScan: {
@@ -73,7 +73,7 @@ std::unique_ptr<AbstractExecutor> ExecutorFactory::CreateExecutor(ExecutorContex
       return std::make_unique<LimitExecutor>(exec_ctx, limit_plan, std::move(child_executor));
     }
 
-    // Create a new limit executor
+    // Create a new distinct executor
     case PlanType::Distinct: {
       auto distinct_plan = dynamic_cast<const DistinctPlanNode *>(plan);
       auto child_executor = ExecutorFactory::CreateExecutor(exec_ctx, distinct_plan->GetChildPlan());

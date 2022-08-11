@@ -21,16 +21,18 @@
 namespace bustub {
 
 std::unordered_map<txn_id_t, Transaction *> TransactionManager::txn_map = {};
+std::shared_mutex TransactionManager::txn_map_mutex = {};
 
-Transaction *TransactionManager::Begin(Transaction *txn, IsolationLevel isolation_level) {
+auto TransactionManager::Begin(Transaction *txn, IsolationLevel isolation_level) -> Transaction * {
   // Acquire the global transaction latch in shared mode.
   global_txn_latch_.RLock();
 
   if (txn == nullptr) {
     txn = new Transaction(next_txn_id_++, isolation_level);
   }
-
+  txn_map_mutex.lock();
   txn_map[txn->GetTransactionId()] = txn;
+  txn_map_mutex.unlock();
   return txn;
 }
 
