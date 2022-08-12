@@ -32,7 +32,9 @@ bool DeleteExecutor::Next([[maybe_unused]] Tuple *tuple, RID *rid) {
   while (child_executor_->Next(tuple, rid)) {
     if (table_info_->table_->MarkDelete(*rid, txn)) {
       for (auto indexinfo : indexes_) {
-        indexinfo->index_->DeleteEntry(*tuple, *rid, txn);
+        indexinfo->index_->DeleteEntry(tuple->KeyFromTuple(*child_executor_->GetOutputSchema(), indexinfo->key_schema_,
+                                                           indexinfo->index_->GetKeyAttrs()),
+                                       *rid, txn);
       }
     }
   }
