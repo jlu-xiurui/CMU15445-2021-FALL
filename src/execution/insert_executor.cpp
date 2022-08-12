@@ -36,22 +36,28 @@ void InsertExecutor::Init() {
 
 bool InsertExecutor::Next([[maybe_unused]] Tuple *tuple, RID *rid) {
   Transaction *txn = exec_ctx_->GetTransaction();
+  Tuple tmp_tuple;
+  RID tmp_rid;
   if (is_raw_) {
     for (uint32_t idx = 0; idx < size_; idx++) {
       const std::vector<Value> &raw_value = plan_->RawValuesAt(idx);
-      *tuple = Tuple(raw_value, &table_info_->schema_);
-      if (table_info_->table_->InsertTuple(*tuple, rid, txn)) {
+      tmp_tuple = Tuple(raw_value, &table_info_->schema_);
+      if (table_info_->table_->InsertTuple(tmp_tuple, &tmp_rid, txn)) {
         for (auto indexinfo : indexes_) {
-          indexinfo->index_->InsertEntry(*tuple, *rid, txn);
+          indexinfo->index_->InsertEntry(
+              tmp_tuple.KeyFromTuple(table_info_->schema_, indexinfo->key_schema_, indexinfo->index_->GetKeyAttrs()),
+              tmp_rid, txn);
         }
       }
     }
     return false;
   }
-  while (child_executor_->Next(tuple, rid)) {
-    if (table_info_->table_->InsertTuple(*tuple, rid, txn)) {
+  while (child_executor_->Next(&tmp_tuple, &tmp_rid)) {
+    if (table_info_->table_->InsertTuple(tmp_tuple, &tmp_rid, txn)) {
       for (auto indexinfo : indexes_) {
-        indexinfo->index_->InsertEntry(*tuple, *rid, txn);
+        indexinfo->index_->InsertEntry(tmp_tuple.KeyFromTuple(*child_executor_->GetOutputSchema(),
+                                                              indexinfo->key_schema_, indexinfo->index_->GetKeyAttrs()),
+                                       tmp_rid, txn);
       }
     }
   }

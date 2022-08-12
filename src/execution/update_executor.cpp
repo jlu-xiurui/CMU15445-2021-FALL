@@ -33,8 +33,12 @@ bool UpdateExecutor::Next([[maybe_unused]] Tuple *tuple, RID *rid) {
     *tuple = this->GenerateUpdatedTuple(src_tuple);
     if (table_info_->table_->UpdateTuple(*tuple, *rid, txn)) {
       for (auto indexinfo : indexes_) {
-        indexinfo->index_->DeleteEntry(src_tuple, *rid, txn);
-        indexinfo->index_->InsertEntry(*tuple, *rid, txn);
+        indexinfo->index_->DeleteEntry(tuple->KeyFromTuple(*child_executor_->GetOutputSchema(), indexinfo->key_schema_,
+                                                           indexinfo->index_->GetKeyAttrs()),
+                                       *rid, txn);
+        indexinfo->index_->InsertEntry(tuple->KeyFromTuple(*child_executor_->GetOutputSchema(), indexinfo->key_schema_,
+                                                           indexinfo->index_->GetKeyAttrs()),
+                                       *rid, txn);
       }
     }
   }

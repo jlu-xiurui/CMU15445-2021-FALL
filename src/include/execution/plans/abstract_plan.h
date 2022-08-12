@@ -31,7 +31,8 @@ enum class PlanType {
   Distinct,
   NestedLoopJoin,
   NestedIndexJoin,
-  HashJoin
+  HashJoin,
+  MockScan
 };
 
 /**
@@ -54,16 +55,16 @@ class AbstractPlanNode {
   virtual ~AbstractPlanNode() = default;
 
   /** @return the schema for the output of this plan node */
-  auto OutputSchema() const -> const Schema * { return output_schema_; }
+  const Schema *OutputSchema() const { return output_schema_; }
 
   /** @return the child of this plan node at index child_idx */
-  auto GetChildAt(uint32_t child_idx) const -> const AbstractPlanNode * { return children_[child_idx]; }
+  const AbstractPlanNode *GetChildAt(uint32_t child_idx) const { return children_[child_idx]; }
 
   /** @return the children of this plan node */
-  auto GetChildren() const -> const std::vector<const AbstractPlanNode *> & { return children_; }
+  const std::vector<const AbstractPlanNode *> &GetChildren() const { return children_; }
 
   /** @return the type of this plan node */
-  virtual auto GetType() const -> PlanType = 0;
+  virtual PlanType GetType() const = 0;
 
  private:
   /**
