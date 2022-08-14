@@ -12,11 +12,11 @@
 
 ### Project 0 : C++ primer 
 
-### Project 1 : BUFFER POOL [note1]()
+### Project 1 : BUFFER POOL [note1](https://github.com/jlu-xiurui/CMU15445-2021-FALL/blob/ghess/p2-refinement/notes/Project%201%20%20BUFFER%20POOL.md)
 
 在本实验中，需要在存储管理器中实现缓冲池。缓冲池负责将物理页面从磁盘中读入内存、或从内存中写回磁盘，使得DBMS可以支持大于内存大小的存储容量。并且，缓冲池应当是用户透明且线程安全的。
 
-### Project 2 : EXTENDIBLE HASH INDEX [note2]()
+### Project 2 : EXTENDIBLE HASH INDEX [note2](https://github.com/jlu-xiurui/CMU15445-2021-FALL/blob/ghess/p2-refinement/notes/Project%202%20%20EXTENDIBLE%20HASH%20INDEX.md)
 
 在本实验中，需要实现一个**磁盘备份**的**可扩展哈希表**，用于DBMS中的索引检索。磁盘备份指该哈希表可写入至磁盘中，在系统重启时可以将其重新读取至内存中使用。可扩展哈希表是动态哈希表的一种类型，其特点为桶在充满或清空时可以桶为单位进行桶分裂或合并，尽在特定情况下进行哈希表全表的扩展和收缩，以减小扩展和收缩操作对全表的影响。
 
