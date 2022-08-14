@@ -30,7 +30,7 @@ class LinkListNode {
   frame_id_t val_{0};
   LinkListNode *prev_{nullptr};
   LinkListNode *next_{nullptr};
-  explicit LinkListNode(frame_id_t Val) : val_(Val), prev_(nullptr), next_(nullptr) {}
+  explicit LinkListNode(frame_id_t Val) : val_(Val) {}
 };
 class LRUReplacer : public Replacer {
  public:
@@ -58,8 +58,8 @@ class LRUReplacer : public Replacer {
  private:
   // TODO(student): implement me!
   std::unordered_map<frame_id_t, LinkListNode *> data_idx_;
-  LinkListNode *head_;
-  LinkListNode *tail_;
+  LinkListNode *head_{nullptr};
+  LinkListNode *tail_{nullptr};
   std::mutex data_latch_;
 };
 

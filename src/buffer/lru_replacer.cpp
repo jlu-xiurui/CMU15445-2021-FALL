@@ -11,34 +11,33 @@
 //===----------------------------------------------------------------------===//
 
 #include "buffer/lru_replacer.h"
-
+#include <iostream>
 namespace bustub {
 
 LRUReplacer::LRUReplacer(size_t num_pages) {}
 
 LRUReplacer::~LRUReplacer() {
-  LinkListNode *ptr = head_;
-  while (ptr != nullptr) {
-    LinkListNode *tmp = ptr;
-    ptr = ptr->next_;
+  LinkListNode *p = head_;
+  while (p != nullptr) {
+    LinkListNode *tmp = p;
+    p = p->next_;
     delete (tmp);
   }
 }
 
 void LRUReplacer::DeleteNode(LinkListNode *curr) {
-  if (curr->prev_ != nullptr) {
-    curr->prev_->next_ = curr->next_;
-  }
-  if (curr->next_ != nullptr) {
-    curr->next_->prev_ = curr->prev_;
-  }
   if (curr == head_ && curr == tail_) {
     head_ = nullptr;
     tail_ = nullptr;
   } else if (curr == head_) {
     head_ = head_->next_;
+    curr->next_->prev_ = curr->prev_;
   } else if (curr == tail_) {
     tail_ = tail_->prev_;
+    curr->prev_->next_ = curr->next_;
+  } else {
+    curr->prev_->next_ = curr->next_;
+    curr->next_->prev_ = curr->prev_;
   }
   delete (curr);
 }
@@ -58,16 +57,18 @@ bool LRUReplacer::Victim(frame_id_t *frame_id) {
 
 void LRUReplacer::Pin(frame_id_t frame_id) {
   data_latch_.lock();
-  if (data_idx_.count(frame_id) != 0U) {
+  auto it = data_idx_.find(frame_id);
+  if (it != data_idx_.end()) {
     DeleteNode(data_idx_[frame_id]);
-    data_idx_.erase(frame_id);
+    data_idx_.erase(it);
   }
   data_latch_.unlock();
 }
 
 void LRUReplacer::Unpin(frame_id_t frame_id) {
   data_latch_.lock();
-  if (data_idx_.count(frame_id) == 0U) {
+  auto it = data_idx_.find(frame_id);
+  if (it == data_idx_.end()) {
     LinkListNode *new_node = new LinkListNode(frame_id);
     if (data_idx_.empty()) {
       head_ = tail_ = new_node;

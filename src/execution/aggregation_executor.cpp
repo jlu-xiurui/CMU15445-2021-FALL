@@ -27,6 +27,7 @@ AggregationExecutor::AggregationExecutor(ExecutorContext *exec_ctx, const Aggreg
 void AggregationExecutor::Init() {
   Tuple tuple;
   RID rid;
+  child_->Init();
   while (child_->Next(&tuple, &rid)) {
     hash_table_.InsertCombine(MakeAggregateKey(&tuple), MakeAggregateValue(&tuple));
   }
