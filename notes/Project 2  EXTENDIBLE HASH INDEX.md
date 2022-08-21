@@ -8,17 +8,17 @@
 
 在进行实验之前，我们应当了解可扩展哈希表的具体实现原理。在这里，其最根本的思想在于通过改变哈希表用于映射至对应桶的哈希键位数来控制哈希表的总大小，该哈希键位数被称为全局深度。下面是全局深度的一个例子：
 
-![figure 1](C:\Users\xiurui1517\Desktop\计算机书单\15445\project2_figure\figure 1.png)
+![figure 1](https://github.com/jlu-xiurui/CMU15445-2021-FALL/blob/ghess/p2-refinement/notes/project2_figure/figure%201.png)
 
 上图为通过哈希函数对字符串产生哈希键的一个示例。可见，当哈希键的位数为32位时，不同的哈希键有2^32个，这代表哈希表将拥有上述数目的目录项以将哈希键映射至相应的哈希桶，该数目显然过于庞大了。因此，我们可以仅关注哈希键的低几位（高几位亦可，但使用低位更易实现）以缩小哈希表目录项的个数。例如，当我们仅关注哈希键的后三位时，不同的哈希键为`...000`至`...111`共8个，因此我们仅需为哈希表保存8个目录项即可将各低位不同的哈希键映射至对应的哈希表。
 
-![figure 2](C:\Users\xiurui1517\Desktop\计算机书单\15445\project2_figure\figure 2.png)
+![figure 2](https://github.com/jlu-xiurui/CMU15445-2021-FALL/blob/ghess/p2-refinement/notes/project2_figure/figure%202.png)
 
 除了用于控制哈希表大小的全局深度外，每个哈希表目录项均具有一个**局部深度**，其记录该目录项所对应的哈希桶所关注的哈希键位数。因此，局部深度**以桶为单位**划分的，某个目录项的局部深度即为该目录项所指的桶的局部深度。例如，如上图可示，当表的全局深度为3，第`001`个目录项的局部深度为2时，哈希键为`...01`的所有键均将被映射至该目录项所对应的哈希桶中，即`001`和`101`两个目录项。因此，当哈希表的全局深度为`i`，某目录项的局部深度为`j`时，指向该目录项所对应的哈希桶的目录项个数为`2^(i-j)`。
 
 下面，我将使用一个例子来展示可扩展哈希表的桶分裂/合并，表扩展/收缩行为。在说明中，将使用`i`代表表的全局深度，`j`代表目录项的局部深度：
 
-![figure 3](C:\Users\xiurui1517\Desktop\计算机书单\15445\project2_figure\figure 3.png)
+![figure 3](https://github.com/jlu-xiurui/CMU15445-2021-FALL/blob/ghess/p2-refinement/notes/project2_figure/figure%203.png)
 
 <a name="splitmethod1"></a>如上图所示，当哈希表刚被创建时，其全局深度为0，即哈希表仅有一个目录项，任何一个哈希键都将被映射到同一个哈希桶。当该哈希桶被充满时，需要进行桶的分裂，在这里，桶分裂的方式有两种，其对应于桶对应目录项的局部深度小于全局深度、桶对应目录项的局部深度等于全局深度两种情况。
 
@@ -26,15 +26,15 @@
 
 注意，可能分裂后的记录仍然均指向同一哈希桶，在这种情况下需要继续扩展哈希表，为了方便讲解，在本章节中不考虑这种特殊情况。因此，当上图中的哈希桶充满时，哈希表将更新至下图所示形式：
 
-![figure 4](C:\Users\xiurui1517\Desktop\计算机书单\15445\project2_figure\figure 4.png)
+![figure 4](https://github.com/jlu-xiurui/CMU15445-2021-FALL/blob/ghess/p2-refinement/notes/project2_figure/figure%204.png)
 
 在这里，表的全局深度由0变为1、两个目录项的局部深度被置为当前全局深度1。下面，当`...0`目录项所对应的桶被充满时，由于全局深度和该目录项的局部深度仍然相同，因此仍需进行表扩展：
 
-![figure 5](C:\Users\xiurui1517\Desktop\计算机书单\15445\project2_figure\figure 5.png)
+![figure 5](https://github.com/jlu-xiurui/CMU15445-2021-FALL/blob/ghess/p2-refinement/notes/project2_figure/figure%205.png)
 
 下面，当`...00`目录项所对应的桶充满时，由于全局深度和该目录项的局部深度仍然相同，因此仍需进行表扩展：
 
-![figure 6](C:\Users\xiurui1517\Desktop\计算机书单\15445\project2_figure\figure 6.png)
+![figure 6](https://github.com/jlu-xiurui/CMU15445-2021-FALL/blob/ghess/p2-refinement/notes/project2_figure/figure%206.png)
 
 <a name="splitmethod2"></a>此时，当.`..001`目录项所对应的桶充满时，由于该目录项的局部深度`j`小于全局深度`i`，因此有`2^(i-j)`个目录项指向所需分裂的哈希桶，因此不必进行表的拓展，仅需将桶分裂，并将原哈希桶映射的目录项的一半指向原哈希桶，另一半指向新哈希桶，最后将指向原哈希桶和新哈希桶的所有目录项的局部深度加一即可。划分的规则为低`j+1`位相同的目录项在分裂后仍指向同一个桶，这种分裂规则保证了局部深度的语义，即分裂后桶关注哈希键的低`j+1`位。
 
@@ -46,19 +46,19 @@
 
 上述操作代码实现[见下文](#splitcode)，分裂后的哈希表如下所示：
 
-![figure 7](C:\Users\xiurui1517\Desktop\计算机书单\15445\project2_figure\figure 7.png)
+![figure 7](https://github.com/jlu-xiurui/CMU15445-2021-FALL/blob/ghess/p2-refinement/notes/project2_figure/figure%207.png)
 
 <a name="mergemethod"></a>可以看出低`j+1 = 2`位相同的目录项在分裂后指向同一哈希桶，即以`...01`和`...11`为结尾的目录项分别指向两个不同的哈希桶。当一个目录项所指的哈希桶为空时，需要判断其是否可以与其**目标目录项**所指的哈希桶合并。一个目录项的目标目录项可由其低第`j`位反转得到，值得注意的是，由于目录项间的局部深度可能不同，因此目标目录项不一定是可逆的。例如，上图中`...010`目录项的目标目录项为`...000`，而`...000`的目标目录项却为`...100`。目录项及其目标目录项所指的两个哈希桶的合并的条件如下：（1）两哈希桶均为空桶；（2）目录项及其目标目录项的局部深度相同且不为0。此时，若`...001`和`...011`目录项所指的两个哈希桶均为空，则可以进行合并（代码实现见[下文](#mergecode)）：
 
-![figure 8](C:\Users\xiurui1517\Desktop\计算机书单\15445\project2_figure\figure 8.png)
+![figure 8](https://github.com/jlu-xiurui/CMU15445-2021-FALL/blob/ghess/p2-refinement/notes/project2_figure/figure%208.png)
 
 合并后，需要将指向合并后哈希桶的所有目录项的局部深度减一。此时，若`...000`和`...100`所指的哈希桶均为空，则可以进行合并：
 
-![figure 9](C:\Users\xiurui1517\Desktop\计算机书单\15445\project2_figure\figure 9.png)
+![figure 9](https://github.com/jlu-xiurui/CMU15445-2021-FALL/blob/ghess/p2-refinement/notes/project2_figure/figure%209.png)
 
 当哈希桶合并后使得所有目录项的局部深度均小于全局深度时，既可以进行哈希表的收缩。在这里可以体现低位可拓展哈希表，即收缩哈希表仅需将全局深度减一即可，而不需改变其余任何哈希表的元数据。下图展示了哈希表收缩后的形态：
 
-![figure 10](C:\Users\xiurui1517\Desktop\计算机书单\15445\project2_figure\figure 10.png)
+![figure 10](https://github.com/jlu-xiurui/CMU15445-2021-FALL/blob/ghess/p2-refinement/notes/project2_figure/figure%2010.png)
 
 ## Task 1 : PAGE LAYOUTS
 
