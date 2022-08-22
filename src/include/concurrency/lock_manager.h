@@ -47,6 +47,7 @@ class LockManager {
   class LockRequestQueue {
    public:
     std::list<LockRequest> request_queue_;
+    std::mutex latch_;
     // for notifying blocked transactions on this rid
     std::condition_variable cv_;
     // txn_id of an upgrading transaction (if any)

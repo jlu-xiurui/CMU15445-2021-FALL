@@ -4,7 +4,7 @@
 
 #include <atomic>
 #include <random>
-
+#include <iostream>
 #include "common/exception.h"
 #include "common/logger.h"
 #include "concurrency/transaction.h"
