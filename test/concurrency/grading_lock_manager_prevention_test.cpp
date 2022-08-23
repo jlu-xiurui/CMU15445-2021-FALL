@@ -3,8 +3,8 @@
  */
 
 #include <atomic>
-#include <random>
 #include <iostream>
+#include <random>
 #include "common/exception.h"
 #include "common/logger.h"
 #include "concurrency/transaction.h"

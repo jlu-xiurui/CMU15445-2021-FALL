@@ -27,10 +27,23 @@ UpdateExecutor::UpdateExecutor(ExecutorContext *exec_ctx, const UpdatePlanNode *
 void UpdateExecutor::Init() { child_executor_->Init(); }
 
 bool UpdateExecutor::Next([[maybe_unused]] Tuple *tuple, RID *rid) {
+  auto exec_ctx = GetExecutorContext();
+  Transaction *txn = exec_ctx_->GetTransaction();
+  TransactionManager *txn_mgr = exec_ctx->GetTransactionManager();
+  LockManager *lock_mgr = exec_ctx->GetLockManager();
+
   Tuple src_tuple;
-  auto *txn = this->GetExecutorContext()->GetTransaction();
   while (child_executor_->Next(&src_tuple, rid)) {
     *tuple = this->GenerateUpdatedTuple(src_tuple);
+    if (txn->GetIsolationLevel() != IsolationLevel::REPEATABLE_READ) {
+      if (!lock_mgr->LockExclusive(txn, *rid)) {
+        txn_mgr->Abort(txn);
+      }
+    } else {
+      if (!lock_mgr->LockUpgrade(txn, *rid)) {
+        txn_mgr->Abort(txn);
+      }
+    }
     if (table_info_->table_->UpdateTuple(*tuple, *rid, txn)) {
       for (auto indexinfo : indexes_) {
         indexinfo->index_->DeleteEntry(tuple->KeyFromTuple(*child_executor_->GetOutputSchema(), indexinfo->key_schema_,
@@ -39,6 +52,10 @@ bool UpdateExecutor::Next([[maybe_unused]] Tuple *tuple, RID *rid) {
         indexinfo->index_->InsertEntry(tuple->KeyFromTuple(*child_executor_->GetOutputSchema(), indexinfo->key_schema_,
                                                            indexinfo->index_->GetKeyAttrs()),
                                        *rid, txn);
+
+        IndexWriteRecord iwr(*rid, table_info_->oid_, WType::UPDATE, *tuple, src_tuple, indexinfo->index_oid_,
+                             exec_ctx->GetCatalog());
+        txn->AppendIndexWriteRecord(iwr);
       }
     }
   }
