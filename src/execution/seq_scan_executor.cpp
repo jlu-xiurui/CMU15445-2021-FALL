@@ -32,15 +32,18 @@ void SeqScanExecutor::Init() {
 
 bool SeqScanExecutor::Next(Tuple *tuple, RID *rid) {
   const Schema *out_schema = this->GetOutputSchema();
-  const Transaction* txn = GetTransaction();
-  const TransactionManager* txn_mgr = GetTransactionManager();
-  const LockManager* lock_mgr = GetLockManager();
+  auto exec_ctx = GetExecutorContext();
+  Transaction *txn = exec_ctx->GetTransaction();
+  TransactionManager *txn_mgr = exec_ctx->GetTransactionManager();
+  LockManager *lock_mgr = exec_ctx->GetLockManager();
   Schema table_schema = table_info_->schema_;
   while (iter_ != end_) {
     Tuple table_tuple = *iter_;
     *rid = table_tuple.GetRid();
-    if(txn->GetIsolationLevel() != IsolationLevel::READ_UNCOMMITTED && !lock_mgr->LockShared(txn,*rid)){
-        txn_mgr.Abort(txn);
+    if (txn->GetSharedLockSet()->count(*rid) == 0U && txn->GetExclusiveLockSet()->count(*rid) == 0U) {
+      if (txn->GetIsolationLevel() != IsolationLevel::READ_UNCOMMITTED && !lock_mgr->LockShared(txn, *rid)) {
+        txn_mgr->Abort(txn);
+      }
     }
     std::vector<Value> values;
     for (const auto &col : GetOutputSchema()->GetColumns()) {
@@ -50,10 +53,13 @@ bool SeqScanExecutor::Next(Tuple *tuple, RID *rid) {
     auto *predicate = plan_->GetPredicate();
     if (predicate == nullptr || predicate->Evaluate(tuple, out_schema).GetAs<bool>()) {
       ++iter_;
+      if (txn->GetIsolationLevel() == IsolationLevel::READ_COMMITTED) {
+        lock_mgr->Unlock(txn, *rid);
+      }
       return true;
     }
-    if(txn->GetIsolationLevel() == IsolationLevel::READ_COMMITTED){
-      lock_mgr->Unlock(txn,*rid);
+    if (txn->GetSharedLockSet()->count(*rid) != 0U && txn->GetIsolationLevel() == IsolationLevel::READ_COMMITTED) {
+      lock_mgr->Unlock(txn, *rid);
     }
     ++iter_;
   }

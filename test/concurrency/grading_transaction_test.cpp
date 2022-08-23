@@ -4,6 +4,7 @@
 
 #include <atomic>
 #include <cstdio>
+#include <iostream>
 #include <memory>
 #include <random>
 #include <string>
@@ -344,6 +345,7 @@ TEST_F(GradingTransactionTest, RepeatableReadsTest) {
     ASSERT_EQ(result_set[2].GetValue(out_schema, out_schema->GetColIdx("colA")).GetAs<int32_t>(), 202);
 
     GetTxnManager()->Commit(txn1);
+    std::cout << "t0 over" << std::endl;
   });
 
   std::thread t1([&] {
@@ -359,7 +361,7 @@ TEST_F(GradingTransactionTest, RepeatableReadsTest) {
     ASSERT_EQ(result_set[1].GetValue(out_schema, out_schema->GetColIdx("colA")).GetAs<int32_t>(), 211);
     // Third value
     ASSERT_EQ(result_set[2].GetValue(out_schema, out_schema->GetColIdx("colA")).GetAs<int32_t>(), 212);
-
+    std::cout << "t1 over" << std::endl;
     GetTxnManager()->Commit(txn2);
   });
 
@@ -370,7 +372,7 @@ TEST_F(GradingTransactionTest, RepeatableReadsTest) {
 }
 
 // NOLINTNEXTLINE
-TEST_F(GradingTransactionTest, DISABLED_IntegratedTest) {
+TEST_F(GradingTransactionTest, IntegratedTest) {
   //  txn1 ->        scan -> join -> aggregate
   //  txn2 ->    delete one tuple -> commit
   //  txn3 -> scan

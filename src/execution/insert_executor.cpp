@@ -35,7 +35,11 @@ void InsertExecutor::Init() {
 }
 
 bool InsertExecutor::Next([[maybe_unused]] Tuple *tuple, RID *rid) {
+  auto exec_ctx = GetExecutorContext();
   Transaction *txn = exec_ctx_->GetTransaction();
+  TransactionManager *txn_mgr = exec_ctx->GetTransactionManager();
+  LockManager *lock_mgr = exec_ctx->GetLockManager();
+
   Tuple tmp_tuple;
   RID tmp_rid;
   if (is_raw_) {
@@ -43,10 +47,16 @@ bool InsertExecutor::Next([[maybe_unused]] Tuple *tuple, RID *rid) {
       const std::vector<Value> &raw_value = plan_->RawValuesAt(idx);
       tmp_tuple = Tuple(raw_value, &table_info_->schema_);
       if (table_info_->table_->InsertTuple(tmp_tuple, &tmp_rid, txn)) {
+        if (!lock_mgr->LockExclusive(txn, tmp_rid)) {
+          txn_mgr->Abort(txn);
+        }
         for (auto indexinfo : indexes_) {
           indexinfo->index_->InsertEntry(
               tmp_tuple.KeyFromTuple(table_info_->schema_, indexinfo->key_schema_, indexinfo->index_->GetKeyAttrs()),
               tmp_rid, txn);
+          IndexWriteRecord iwr(*rid, table_info_->oid_, WType::INSERT, *tuple, *tuple, indexinfo->index_oid_,
+                               exec_ctx->GetCatalog());
+          txn->AppendIndexWriteRecord(iwr);
         }
       }
     }
@@ -54,10 +64,15 @@ bool InsertExecutor::Next([[maybe_unused]] Tuple *tuple, RID *rid) {
   }
   while (child_executor_->Next(&tmp_tuple, &tmp_rid)) {
     if (table_info_->table_->InsertTuple(tmp_tuple, &tmp_rid, txn)) {
+      if (!lock_mgr->LockExclusive(txn, *rid)) {
+        txn_mgr->Abort(txn);
+      }
       for (auto indexinfo : indexes_) {
         indexinfo->index_->InsertEntry(tmp_tuple.KeyFromTuple(*child_executor_->GetOutputSchema(),
                                                               indexinfo->key_schema_, indexinfo->index_->GetKeyAttrs()),
                                        tmp_rid, txn);
+        txn->GetIndexWriteSet()->emplace_back(tmp_rid, table_info_->oid_, WType::INSERT, tmp_tuple, tmp_tuple,
+                                              indexinfo->index_oid_, exec_ctx->GetCatalog());
       }
     }
   }

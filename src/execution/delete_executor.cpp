@@ -28,13 +28,29 @@ DeleteExecutor::DeleteExecutor(ExecutorContext *exec_ctx, const DeletePlanNode *
 void DeleteExecutor::Init() { child_executor_->Init(); }
 
 bool DeleteExecutor::Next([[maybe_unused]] Tuple *tuple, RID *rid) {
-  auto *txn = this->GetExecutorContext()->GetTransaction();
+  auto exec_ctx = GetExecutorContext();
+  Transaction *txn = exec_ctx_->GetTransaction();
+  TransactionManager *txn_mgr = exec_ctx->GetTransactionManager();
+  LockManager *lock_mgr = exec_ctx->GetLockManager();
+
   while (child_executor_->Next(tuple, rid)) {
+    if (txn->GetIsolationLevel() != IsolationLevel::REPEATABLE_READ) {
+      if (!lock_mgr->LockExclusive(txn, *rid)) {
+        txn_mgr->Abort(txn);
+      }
+    } else {
+      if (!lock_mgr->LockUpgrade(txn, *rid)) {
+        txn_mgr->Abort(txn);
+      }
+    }
     if (table_info_->table_->MarkDelete(*rid, txn)) {
       for (auto indexinfo : indexes_) {
         indexinfo->index_->DeleteEntry(tuple->KeyFromTuple(*child_executor_->GetOutputSchema(), indexinfo->key_schema_,
                                                            indexinfo->index_->GetKeyAttrs()),
                                        *rid, txn);
+        IndexWriteRecord iwr(*rid, table_info_->oid_, WType::DELETE, *tuple, *tuple, indexinfo->index_oid_,
+                             exec_ctx->GetCatalog());
+        txn->AppendIndexWriteRecord(iwr);
       }
     }
   }
