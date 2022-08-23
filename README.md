@@ -11,7 +11,9 @@
 - 关系数据库中保证原子性、隔离性、持久性的崩溃恢复算法的策略，包括日志、检查点、重做和撤销操作；
 ## 课程项目笔记
 
-### Project 0 : C++ primer 
+### Project 0 : C++ primer [note0](https://github.com/jlu-xiurui/CMU15445-2021-FALL/blob/ghess/p2-refinement/notes/Project%200%20%20C%2B%2B%20Primer.md)
+
+实现一个简单的矩阵运算类，用于检查实验者的基本C++编程水平。
 
 ### Project 1 : BUFFER POOL [note1](https://github.com/jlu-xiurui/CMU15445-2021-FALL/blob/ghess/p2-refinement/notes/Project%201%20%20BUFFER%20POOL.md)
 
