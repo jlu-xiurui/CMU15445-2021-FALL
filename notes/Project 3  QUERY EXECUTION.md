@@ -4,7 +4,7 @@
 
 ## 查询计划执行
 
-![figure1](C:\Users\xiurui1517\Desktop\计算机书单\15445\notes\project3_figure\figure1.png)
+![figure1](https://github.com/jlu-xiurui/CMU15445-2021-FALL/blob/ghess/p2-refinement/notes/project3_figure/figure1.png)
 
 在关系型数据库中，物理查询计划在系统内部被组织成树的形式，并通过特定的查询处理模型（迭代器模型、生产者模型）进行执行。在本实验中所要实现的模型为迭代器模型，如上图所示，该模型的每个查询计划节点通过`NEXT()`方法得到其所需的下一个元组，直至`NEXT()`方法返回假。在执行流中，根节点的`NEXT()`方法最先被调用，其控制流向下传播直至叶节点。
 
@@ -290,7 +290,7 @@ bool NestedLoopJoinExecutor::Next(Tuple *tuple, RID *rid) {
 
 `HashJoinExecutor`使用基础哈希连接算法进行连接操作，其原理为将元组的连接键（即某些属性列的组合）作为哈希表的键，并使用其中一个子计划节点的元组构造哈希表。由于具有相同连接键的元组一定具有相同的哈希键值，因此另一个子计划节点中的元组仅需在该元组映射的桶中寻找可与其连接的元组，如下图所示：
 
-![figure2](C:\Users\xiurui\Desktop\计算机书单\CMU15445\notes\project3_figure\figure2.png)
+![figure2](https://github.com/jlu-xiurui/CMU15445-2021-FALL/blob/ghess/p2-refinement/notes/project3_figure/figure2.png)
 
 为了使得元组可以被插入哈希表，需要为元组的连接键设定对应的哈希函数，以及其连接键的比较方法：
 
@@ -596,4 +596,4 @@ bool DistinctExecutor::Next(Tuple *tuple, RID *rid) {
 
 ## 实验结果
 
-![figure3](C:\Users\xiurui\Desktop\计算机书单\CMU15445\notes\project3_figure\figure3.png)
+![figure3](https://github.com/jlu-xiurui/CMU15445-2021-FALL/blob/ghess/p2-refinement/notes/project3_figure/figure3.png)
