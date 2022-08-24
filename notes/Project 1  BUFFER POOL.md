@@ -478,4 +478,4 @@
 
 ## 实验结果
 
-![figure0](C:\Users\xiurui\Desktop\计算机书单\CMU15445\notes\project1_figure\figure0.png)
+![figure0](https://github.com/jlu-xiurui/CMU15445-2021-FALL/blob/ghess/p2-refinement/notes/project1_figure/figure0.png)
