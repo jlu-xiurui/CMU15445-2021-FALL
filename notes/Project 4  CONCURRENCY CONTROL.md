@@ -45,11 +45,11 @@
 
 `TransactionManager`中进行事务的实际行为，如`BEGIN`、`COMMIT`、`ABORT`，并可以通过其获得对应ID的具体事务。
 
-![figure1](C:\Users\xiurui\Desktop\计算机书单\CMU15445\notes\project4_figure\figure1.png)
+![figure1](https://github.com/jlu-xiurui/CMU15445-2021-FALL/blob/ghess/p2-refinement/notes/project4_figure/figure1.png)
 
 事务的不同隔离级别将导致不同的可能并发异常情况，并在两阶段锁策略中通过不同的获取释放锁方式实现。
 
-![figure2](C:\Users\xiurui\Desktop\计算机书单\CMU15445\notes\project4_figure\figure2.png)
+![figure2](https://github.com/jlu-xiurui/CMU15445-2021-FALL/blob/ghess/p2-refinement/notes/project4_figure/figure2.png)
 
 ### 死锁预防策略
 
@@ -57,7 +57,7 @@
 
 ### 锁请求表
 
-![figure3](C:\Users\xiurui\Desktop\计算机书单\CMU15445\notes\project4_figure\figure3.png)
+![figure3](https://github.com/jlu-xiurui/CMU15445-2021-FALL/blob/ghess/p2-refinement/notes/project4_figure/figure4.png)
 
 在锁管理器中，使用`lock table`管理锁，`lock table`是以元组ID为键，锁请求队列为值的哈希表。其中，锁请求中保存了请求该元组锁的事务ID、请求的元组锁类型、以及请求是否被许可；通过队列的方式保存锁保证了锁请求的先后顺序：
 
@@ -474,4 +474,4 @@
 
 ## 实验结果
 
-![figure4](E:\ubuntu\sharedoc\notes\project4_figure\figure4.png)
+![figure4](https://github.com/jlu-xiurui/CMU15445-2021-FALL/blob/ghess/p2-refinement/notes/project4_figure/figure4.png)
