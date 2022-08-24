@@ -38,7 +38,7 @@ auto LockManager::LockShared(Transaction *txn, const RID &rid) -> bool {
   request_queue.emplace_back(txn_id, LockMode::SHARED);
   txn->GetSharedLockSet()->emplace(rid);
   txn_table_[txn_id] = txn;
-
+  //Wound Wait : Kill all low priority transaction
   bool can_grant = true;
   bool is_kill = false;
   for (auto &request : request_queue) {
@@ -58,7 +58,7 @@ auto LockManager::LockShared(Transaction *txn, const RID &rid) -> bool {
   if (is_kill) {
     cv.notify_all();
   }
-
+  //Wait the lock
   while (!can_grant) {
     for (auto &request : request_queue) {
       if (request.lock_mode_ == LockMode::EXCLUSIVE &&
@@ -97,7 +97,7 @@ auto LockManager::LockExclusive(Transaction *txn, const RID &rid) -> bool {
   request_queue.emplace_back(txn_id, LockMode::EXCLUSIVE);
   txn->GetExclusiveLockSet()->emplace(rid);
   txn_table_[txn_id] = txn;
-
+  //Wound Wait
   bool can_grant = true;
   bool is_kill = false;
   for (auto &request : request_queue) {
@@ -115,7 +115,7 @@ auto LockManager::LockExclusive(Transaction *txn, const RID &rid) -> bool {
   if (is_kill) {
     cv.notify_all();
   }
-
+  //Wait lock
   while (!can_grant) {
     auto it = request_queue.begin();
     while (txn_table_[it->txn_id_]->GetState() == TransactionState::ABORTED) {
@@ -167,10 +167,7 @@ auto LockManager::LockUpgrade(Transaction *txn, const RID &rid) -> bool {
       ++it;
     }
     if (is_kill) {
-      lk.unlock();
       cv.notify_all();
-      lk.lock();
-      continue;
     }
     if (!can_grant) {
       cv.wait(lk);
@@ -189,13 +186,10 @@ auto LockManager::LockUpgrade(Transaction *txn, const RID &rid) -> bool {
 }
 
 auto LockManager::Unlock(Transaction *txn, const RID &rid) -> bool {
-  if (txn->GetState() == TransactionState::GROWING && txn->GetIsolationLevel() == IsolationLevel::REPEATABLE_READ) {
+ // if (txn->GetState() == TransactionState::GROWING && txn->GetIsolationLevel() == IsolationLevel::REPEATABLE_READ) {
     txn->SetState(TransactionState::SHRINKING);
-  }
-  /*if(txn->GetIsolationLevel() == IsolationLevel::REPEATABLE_READ && txn->GetState() == TransactionState::SHRINKING){
-    txn->SetState(TransactionState::ABORTED);
-    throw TransactionAbortException(txn->GetTransactionId(),AbortReason::UNLOCK_ON_SHRINKING);
-  }*/
+  //}
+
   std::unique_lock<std::mutex> lk(latch_);
   auto &lock_request_queue = lock_table_[rid];
   auto &request_queue = lock_request_queue.request_queue_;
@@ -205,10 +199,7 @@ auto LockManager::Unlock(Transaction *txn, const RID &rid) -> bool {
   while (it->txn_id_ != txn_id) {
     ++it;
   }
-  /*if(txn->GetState() == TransactionState::SHRINKING && it->lock_mode_ == LockMode::EXCLUSIVE &&
-  txn->GetIsolationLevel() == IsolationLevel::READ_COMMITTED){ txn->SetState(TransactionState::ABORTED); throw
-  TransactionAbortException(txn->GetTransactionId(),AbortReason::UNLOCK_ON_SHRINKING);
-  }*/
+
   request_queue.erase(it);
   cv.notify_all();
   txn->GetSharedLockSet()->erase(rid);

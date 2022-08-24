@@ -475,3 +475,7 @@
 
 1. 从`start_idx_`开始遍历各独立缓冲池，如存在调用`NewPage`成功的页面，则返回该页面并将`start_idx`指向该页面的下一个页面；
 2. 如全部缓冲池调用`NewPage`均失败，则返回空指针，并递增`start_idx`。
+
+## 实验结果
+
+![figure0](C:\Users\xiurui\Desktop\计算机书单\CMU15445\notes\project1_figure\figure0.png)

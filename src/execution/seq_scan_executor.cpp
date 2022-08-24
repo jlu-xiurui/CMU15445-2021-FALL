@@ -53,9 +53,9 @@ bool SeqScanExecutor::Next(Tuple *tuple, RID *rid) {
     auto *predicate = plan_->GetPredicate();
     if (predicate == nullptr || predicate->Evaluate(tuple, out_schema).GetAs<bool>()) {
       ++iter_;
-      if (txn->GetIsolationLevel() == IsolationLevel::READ_COMMITTED) {
-        lock_mgr->Unlock(txn, *rid);
-      }
+      //if (txn->GetIsolationLevel() == IsolationLevel::READ_COMMITTED) {
+      //  lock_mgr->Unlock(txn, *rid);
+      //}
       return true;
     }
     if (txn->GetSharedLockSet()->count(*rid) != 0U && txn->GetIsolationLevel() == IsolationLevel::READ_COMMITTED) {

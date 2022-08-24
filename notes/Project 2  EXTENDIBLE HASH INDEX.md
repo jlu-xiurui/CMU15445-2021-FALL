@@ -560,3 +560,7 @@
 ```
 
 在`Merge`函数获取写锁后，需要重新判断是否满足合并条件，以防止在释放锁的空隙时页面被更改，在合并被执行时，需要判断当前目录页面是否可以收缩，如可以搜索在这里仅需递减全局深度即可完成收缩，最后释放页面和写锁。具体的合并细节和策略见[上文](#mergemethod)。<a name="mergecode"></a>
+
+## 实验结果
+
+![figure11](C:\Users\xiurui\Desktop\计算机书单\CMU15445\notes\project2_figure\figure11.png)

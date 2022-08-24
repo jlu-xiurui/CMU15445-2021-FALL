@@ -152,3 +152,7 @@
 ```
 
 以上三个矩阵操作函数的逻辑都比较简单，唯一需要注意的是在运算前应检查两矩阵的规格是否匹配。
+
+## 实验结果
+
+![figure0](C:\Users\xiurui\Desktop\计算机书单\CMU15445\notes\project0_figure\figure0.png)
