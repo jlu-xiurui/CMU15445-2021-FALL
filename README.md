@@ -28,3 +28,7 @@
 ### Project 3 : QUERY EXECUTION [note3](https://github.com/jlu-xiurui/CMU15445-2021-FALL/blob/ghess/p2-refinement/notes/Project%203%20%20QUERY%20EXECUTION.md)
 
 在关系数据库中，SQL语句将被转换为逻辑查询计划，并在进行查询优化后转化为物理查询计划，系统通过执行物理查询计划完成对应的语句功能。在本实验中，需要为`bustub`实现物理查询计划执行功能，包括顺序扫描、插入、删除、更改、连接、聚合以及`DISTINCT`和`LIMIT`。
+
+### Project 4 : CONCURRENCY CONTROL [note4](https://github.com/jlu-xiurui/CMU15445-2021-FALL/blob/ghess/p2-refinement/notes/Project%204%20%20CONCURRENCY%20CONTROL.md)
+
+本实验将实现`bustub`中的锁管理器，其负责跟踪数据库中使用的元组级锁，以使得数据库支持并发的查询计划执行。
