@@ -563,4 +563,4 @@
 
 ## 实验结果
 
-![figure11](C:\Users\xiurui\Desktop\计算机书单\CMU15445\notes\project2_figure\figure11.png)
+![figure11](https://github.com/jlu-xiurui/CMU15445-2021-FALL/blob/ghess/p2-refinement/notes/project2_figure/figure11.png)
