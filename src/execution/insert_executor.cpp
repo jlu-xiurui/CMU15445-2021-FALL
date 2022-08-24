@@ -64,8 +64,14 @@ bool InsertExecutor::Next([[maybe_unused]] Tuple *tuple, RID *rid) {
   }
   while (child_executor_->Next(&tmp_tuple, &tmp_rid)) {
     if (table_info_->table_->InsertTuple(tmp_tuple, &tmp_rid, txn)) {
-      if (!lock_mgr->LockExclusive(txn, *rid)) {
-        txn_mgr->Abort(txn);
+      if (txn->GetIsolationLevel() != IsolationLevel::REPEATABLE_READ) {
+        if (!lock_mgr->LockExclusive(txn, *rid)) {
+          txn_mgr->Abort(txn);
+        }
+      } else {
+        if (!lock_mgr->LockUpgrade(txn, *rid)) {
+          txn_mgr->Abort(txn);
+        }
       }
       for (auto indexinfo : indexes_) {
         indexinfo->index_->InsertEntry(tmp_tuple.KeyFromTuple(*child_executor_->GetOutputSchema(),
